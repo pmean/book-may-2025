@@ -1,0 +1,228 @@
+---
+title: "Word count"
+execute: 
+  echo: true
+format:
+  html:
+    embed-resources: true
+---
+
+## Word counts
+
+Here are the page counts for each chapter.
+
+```{r}
+#| message: false
+#| warning: false
+#| label: setup
+
+
+library(glue)
+library(stringr)
+library(tidyverse)
+```
+
+```{r}
+#| echo: true
+#| label: page-counts
+
+count_words <- function(fn) {
+  read_lines(fn) |>
+    paste0(collapse=" ") |>
+    str_replace_all("[^a-z A-Z]", " ") |>
+    str_replace_all(" +", "~") |> 
+    str_split("~") |>
+    unlist() |>
+    length()
+}
+
+n <- count_words("../index.qmd")
+
+file_list <- list.files(path="../chapters")
+for (fn in file_list) {
+  ni <- count_words(glue("../chapters/{fn}"))
+  n <- append(n, ni)
+}
+n_total <- sum(n)
+paste0("-   Chapter ", 0:length(file_list), ": ", n) |>
+  str_replace_all("Chapter 0", "Preface") |>
+  str_replace_all("Chapter 22", "Summary") |>
+  str_replace_all("Chapter 23", "Bibliography") |>
+  paste0(collapse="\n") -> chapter_count
+write_lines(c(n_total, n), paste0(Sys.Date(), ".txt"))
+```
+
+There are approximately `r n_total` words in the book. The word counts for individual chapters are
+
+`r chapter_count`
+
+## Scatterplot of sqft and price
+
+```{r}
+#| label: plot-1
+
+f1 <- "https://raw.githubusercontent.com/pmean/"
+f2 <- "data/refs/heads/main/files/"
+f3 <- "albuquerque-housing.csv"
+
+housing <- read_csv(
+  paste0(f1, f2, f3),
+  col_types="nnnnccc",
+  na=".")
+
+beta <- coef(lm(price~sqft, data=housing))
+beta
+
+predicted_1 <- beta[1]+1000*beta[2]
+predicted_2 <- beta[1]+3000*beta[2]
+
+predicted_1
+predicted_2
+
+highlight <- "darkgreen"
+
+housing |>
+  ggplot() +
+  aes(x=sqft, y=price) +
+  geom_point() +
+  geom_smooth(
+    method="lm",
+    formula=y~x,
+    se=FALSE,
+    color="black") +
+  labs(
+    x="Size of house (square feet)",
+    y="Price of house (dollars)",
+    caption="Plot produced by Steve Simon on 2025-05-26") -> figure_11_01
+
+figure_11_01
+ggsave("../images/figure-11-01.png")
+```
+
+## Rescaled scatterplot
+
+```{r}
+#| label: plot-2
+
+x0 <- 0
+y0 <- beta[1]
+x1 <- min(housing$sqft)
+y1 <- beta[1] + beta[2]*x1
+
+figure_11_01 +
+  expand_limits(x=0, y=0) + 
+  geom_segment(
+    x=x0, 
+    y=y0, 
+    xend=x1, 
+    yend=y1,
+    linetype="dashed",
+    color=highlight) -> figure_11_02
+
+figure_11_02
+ggsave("../images/figure-11-02.png")
+```
+
+## Scaterplot of custom and price
+
+```{r}
+#| label: plot-3
+
+housing |>
+  group_by(custom_build) |>
+  summarize(price_mean=mean(price)) -> table_3
+
+table_3
+
+y_mean <- table_3$price_mean
+
+housing |>
+  ggplot() +
+  aes(x=custom_build, y=price) +
+  geom_boxplot() +
+  geom_segment(
+    x=1,
+    y=y_mean[1],
+    xend=2,
+    yend=y_mean[2],
+    color=highlight) +
+  geom_text(
+    x=1, 
+    y=y_mean[1], 
+    label="+", 
+    color=highlight) +
+  geom_text(
+    x=2, 
+    y=y_mean[2], 
+    label="+", 
+    color=highlight) +
+  labs(
+    x="Is house custom built?",
+    y="Price of house (dollars)",
+    caption="Plot produced by Steve Simon on 2025-05-26") -> figure_11_03
+
+figure_11_03
+ggsave("../images/figure-11-03.png")
+```
+
+## Scaterplot of custom and sqft
+
+```{r}
+#| label: plot-4
+
+housing |>
+  group_by(custom_build) |>
+  summarize(sqft_mean=mean(sqft)) -> table_4
+
+table_4
+
+y_mean <- table_4$sqft_mean
+
+housing |>
+  ggplot() +
+  aes(x=custom_build, y=sqft) +
+  geom_boxplot() +
+  geom_segment(
+    x=1,
+    y=y_mean[1],
+    xend=2,
+    yend=y_mean[2],
+    color=highlight) +
+  geom_text(
+    x=1, 
+    y=y_mean[1], 
+    label="+", 
+    color=highlight) +
+  geom_text(
+    x=2, 
+    y=y_mean[2], 
+    label="+", 
+    color=highlight) +
+  labs(
+    x="Is house custom built?",
+    y="Size of house (square feet)",
+    caption="Plot produced by Steve Simon on 2025-05-26") -> figure_11_04
+
+figure_11_04
+ggsave("../images/figure-11-04.png")
+```
+
+## Correlations
+
+```{r}
+#| label: correlations
+
+
+housing |>
+  mutate(i_custom=as.numeric(custom_build=="yes")) |>
+  select(price, sqft, i_custom) |>
+  cor() -> table_13_01
+
+table_13_01
+
+sink("../images/table_13_01.txt")
+cat("```{}\n")
+table_13_01
+cat("```\n")
+sink()
+```

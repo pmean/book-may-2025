@@ -1,0 +1,19 @@
+# Running a non-linear regression analysis
+
+This chapter is based on [S-shaped curves](http://new.pmean.com/fitting-s-shaped-curves/) published 2004-02-12. Also refer to [Tentative table of contents](http://www.pmean.com/10/Contents.html).
+
+## Step 1: Plot your data
+
+Look for interactions
+
+## Step 2: Explore your function
+
+Add text.
+
+## Step 3: Fit your model
+
+Add text.
+
+## The fly in the ointment: ill-conditioned models
+
+Add text.

@@ -1,0 +1,19 @@
+# Running a descriptive data analysis
+
+This chapter is based on [Steps in a descriptive model](http://new.pmean.com/steps-in-descriptive-model/) published 2001-10-11. Also refer to [Tentative table of contents](http://www.pmean.com/10/Contents.html).
+
+## Step 1: Know your count
+
+Add text.
+
+## Step 2: Compute ranges and frequencies
+
+Add text.
+
+## Step 3: Examine relationships using crosstabs, boxplots, and/or scatterplots
+
+Add text.
+
+## The fly in the ointment: ordinal data
+
+Add text.
